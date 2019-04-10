@@ -187,18 +187,23 @@ void SerialManager::respondToByte(char c) {
         // If you don't give a button an id, then it will be assigned the id 'default'.  IDs don't have to be unique; if two buttons have the same id,
         // then you always control them together and they'll always have the same state. 
         // Please don't put commas or colons in your ID strings!
-        char jsonConfig[] = "JSON={'pages':["
-                              "{'title':'Presets','cards':["
-                                "{'name':'Audio Type','buttons':[{'label': 'Mute', 'cmd': 'q', 'id': 'mute'},{'label': 'Mono', 'cmd': 'm', 'id': 'mono'},{'label': 'Stereo', 'cmd': 'M', 'id': 'stereo'}]},"
-                                "{'name':'Audio Processing','buttons':[{'label': 'Linear','cmd': 'l', 'id': 'linear'},{'label': 'Fast-Comp','cmd': 'k', 'id': 'fast'},{'label': 'Slow-Comp','cmd': 'K', 'id': 'slow'}]}"
-                              "]},"
-                              "{'title':'Tuner','cards':["
-                                "{'name':'Select Input','buttons':[{'label': 'Headset Mics', 'cmd': 'W', 'id':'configHeadset'},{'label': 'PCB Mics', 'cmd': 'w', 'id': 'configPCB'}]},"
-                                "{'name':'Input Gain', 'buttons':[{'label': 'Less', 'cmd' :'I'},{'label': 'More', 'cmd': 'i'}]},"
-                                "{'name':'Record Mics to SD Card','buttons':[{'label': 'Prepare', 'cmd': 'p'},{'label': 'Start', 'cmd': 'r', 'id':'recordStart'},{'label': 'Stop', 'cmd': 's'}]},"
-                                "{'name':'CPU Reporting', 'buttons':[{'label': 'Start', 'cmd' :'c','id':'cpuStart'},{'label': 'Stop', 'cmd': 'C'}]}"
-                              "]}"                            
-                            "]}";
+        // The 'icon' is how the device appears in the app - could be an icon, could be a pic of the device.  Put the
+        // image in the TympanRemote app in /src/assets/devIcon/ and set 'icon' to the filename.
+        char jsonConfig[] = "JSON={"
+          "'icon':'tympan.png',"
+          "'pages':["
+            "{'title':'Presets','cards':["
+              "{'name':'Audio Type','buttons':[{'label': 'Mute', 'cmd': 'q', 'id': 'mute'},{'label': 'Mono', 'cmd': 'm', 'id': 'mono'},{'label': 'Stereo', 'cmd': 'M', 'id': 'stereo'}]},"
+              "{'name':'Audio Processing','buttons':[{'label': 'Linear','cmd': 'l', 'id': 'linear'},{'label': 'Fast-Comp','cmd': 'k', 'id': 'fast'},{'label': 'Slow-Comp','cmd': 'K', 'id': 'slow'}]}"
+            "]},"
+            "{'title':'Tuner','cards':["
+              "{'name':'Select Input','buttons':[{'label': 'Headset Mics', 'cmd': 'W', 'id':'configHeadset'},{'label': 'PCB Mics', 'cmd': 'w', 'id': 'configPCB'}]},"
+              "{'name':'Input Gain', 'buttons':[{'label': 'Less', 'cmd' :'I'},{'label': 'More', 'cmd': 'i'}]},"
+              "{'name':'Record Mics to SD Card','buttons':[{'label': 'Prepare', 'cmd': 'p'},{'label': 'Start', 'cmd': 'r', 'id':'recordStart'},{'label': 'Stop', 'cmd': 's'}]},"
+              "{'name':'CPU Reporting', 'buttons':[{'label': 'Start', 'cmd' :'c','id':'cpuStart'},{'label': 'Stop', 'cmd': 'C'}]}"
+            "]}"                            
+          "]"
+        "}";
         audioHardware.println(jsonConfig);
         delay(100);
         printFullGUIState();
