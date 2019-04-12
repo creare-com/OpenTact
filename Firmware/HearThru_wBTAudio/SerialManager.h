@@ -7,10 +7,11 @@
 
 //define state
 #define NO_STATE (-1)
-typedef struct state_t {
-  int input_source = NO_STATE;
-  int audio = NO_STATE;
-  int alg = NO_STATE;
+class State_t {
+  public:
+    int input_source = NO_STATE;
+    int audio = NO_STATE;
+    int alg = NO_STATE;
 };
 
 //now, define the Serial Manager class
@@ -78,7 +79,7 @@ extern void setAudioSlowComp(void);
 //Extern variables
 extern float vol_knob_gain_dB;
 extern float input_gain_dB;
-extern state_t myState;
+extern State_t myState;
 extern const int INPUT_PCBMICS;
 extern const int INPUT_MICJACK;
 extern const int INPUT_LINEIN_SE;

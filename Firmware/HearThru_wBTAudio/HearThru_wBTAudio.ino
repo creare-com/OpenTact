@@ -31,7 +31,7 @@ AudioSettings_F32 audio_settings(sample_rate_Hz, audio_block_samples);
 
 // Define the overall setup
 String overall_name = String("Tympan: Multi-Mode Hear-Thru wBTAudio");
-float default_input_gain_dB = 0.0f; //gain on the microphone
+float default_input_gain_dB = 5.0f; //gain on the microphone
 float input_gain_dB = default_input_gain_dB;
 float vol_knob_gain_dB = 0.0; //will be overridden by volume knob, if used
 float output_volume_dB = 0.0; //volume setting of output PGA
@@ -97,26 +97,26 @@ void setAlgorithmParameters(void) {
   }
 
   //universal compression parameters
-  float maxdB = 105.0;  //calibration factor.  What dB SPL is full scale?
-  float exp_cr = 1.0, exp_end_knee = 0.0;    //expansion regime: compression ratio and knee point
-  float tkgain = 0.0;     //compression-start gain (ie, gain of linear regime)
+  float maxdB = 115.0;  //calibration factor.  What dB SPL is full scale?  For OpenTact at +5dB mic gain: 115dB in room results in FS.
+  float exp_cr = 1.0, exp_end_knee = 0.0;    //expansion regime: compression ratio and knee point.  1.0 defeats this feature
+  float tkgain = 0.0;     //compression-start gain (ie, gain of linear regime).
 
   {
     //configure fast compression
     float attack_ms = 5.0, release_ms = 100.0;
     float comp_ratio = 5.0; //compression regime: compression ratio
-    float tk = 80.0;        //compression regime: compression knee point (dB SPL...related via maxdB)
-    float bolt = 100.0;     //compression regime: output limiter
+    float tk = 85.0;        //compression regime: compression knee point (dB SPL...related via maxdB)
+    float bolt = 105.0;     //compression regime: output limiter
     
     fastCompL.setParams(attack_ms, release_ms, maxdB, exp_cr, exp_end_knee, tkgain, comp_ratio, tk, bolt);
     fastCompR.setParams(attack_ms, release_ms, maxdB, exp_cr, exp_end_knee, tkgain, comp_ratio, tk, bolt);   
   }
   {
     //configure slow compression
-    float attack_ms = 5000.0, release_ms = 5000.0;
-    float comp_ratio = 3.0; //compression regime: compression ratio
-    float tk = 95.0;        //compression regime: compression knee point (dB SPL...related via maxdB)
-    float bolt = 120.0;     //compression regime: output limiter
+    float attack_ms = 3000.0, release_ms = 3000.0;
+    float comp_ratio = 5.0; //compression regime: compression ratio
+    float tk = 80.0;        //compression regime: compression knee point (dB SPL...related via maxdB)
+    float bolt = 110.0;     //compression regime: output limiter
     
     slowCompL.setParams(attack_ms, release_ms, maxdB, exp_cr, exp_end_knee, tkgain, comp_ratio, tk, bolt);
     slowCompR.setParams(attack_ms, release_ms, maxdB, exp_cr, exp_end_knee, tkgain, comp_ratio, tk, bolt);   
@@ -134,7 +134,7 @@ SerialManager serialManager(audioHardware);
 #define BOTH_SERIAL audioHardware
 
 //keep track of state
-state_t myState;
+State_t myState;
 
 int current_config = 0;
 void setConfiguration(int config) { 
