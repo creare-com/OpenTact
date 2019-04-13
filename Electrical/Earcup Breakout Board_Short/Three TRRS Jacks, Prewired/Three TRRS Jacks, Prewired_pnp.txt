@@ -1,0 +1,65 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=Three TRRS Jacks, Prewired
+*Date=18:40:02
+*CreatedBy=Fritzing 0.9.3b.04.19.5c895d327c44a3114e5fcc9d8260daf0cbb52806
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;;2.43811;-2.25756;0;Bottom;Hole3
+2;;RC-5325A [SMD];24.0715;-6.07312;-90;Top;TRRS2
+3;;;11.7844;-10.5127;0;Bottom;Via13
+4;;;13.6894;-6.70265;0;Bottom;Via4
+5;;;40.3594;-11.1477;0;Bottom;Via8
+6;;;38.3282;-1.2886;0;Bottom;TXT2
+7;;;33.579;-11.5736;0;Bottom;TXT6
+8;;;35.9217;-9.88076;0;Bottom;Via9
+9;;;24.4844;-3.52765;0;Bottom;Via15
+10;;RC-5325A [SMD];10.1161;-6.05339;90;Bottom;TRRS4
+11;;;1.6819;-6.33256;-90;Bottom;TXT6
+12;;;9.87937;-9.24265;0;Bottom;Via14
+13;;;38.2662;-13.0526;0;Bottom;Hole5
+14;;;33.3699;-11.5316;0;Bottom;TXT6
+15;;;6.06937;-9.87765;0;Bottom;Via10
+16;;;29.5644;-9.24265;0;Bottom;Via7
+17;;RC-5325A [SMD];24.1016;-6.05339;90;Bottom;TRRS5
+18;;THT;17.4995;-11.1476;0;Bottom;J2
+19;;;35.9144;-6.70265;0;Bottom;Via5
+20;;;40.3594;-8.99035;0;Bottom;Via3
+21;;;43.5903;-11.6488;0;Bottom;TXT6
+22;;;1.81116;-12.0857;-90;Bottom;TXT6
+23;;RC-5325A [SMD];40.354;-5.75394;180;Top;TRRS3
+24;;;11.7844;-5.43265;0;Bottom;Via1
+25;;sj_2s-trace;16.9915;-6.70256;180;Bottom;SJ1
+26;;;15.2905;-10.9798;90;Bottom;TXT6
+27;;THT;3.52947;-11.911;0;Bottom;J1
+28;;sj_2s-trace;16.9915;-4.79756;180;Bottom;SJ2
+29;;;1.30292;-6.61144;90;Bottom;TXT6
+30;;THT;3.52947;-6.69211;0;Bottom;J5
+31;;;15.9745;-11.0578;-90;Bottom;TXT6
+32;;;5.09801;-0.981822;0;Bottom;TXT6
+33;;;27.6582;-11.1361;0;Bottom;Via20
+34;;;18.9077;-0.953036;0;Bottom;TXT6
+35;;;1.37521;-11.6223;90;Bottom;TXT6
+36;;;18.8234;-1.05157;0;Bottom;TXT6
+37;;;30.1994;-5.43265;0;Bottom;Via2
+38;;;38.274;-1.13084;0;Bottom;TXT2
+39;;;20.0334;-9.88358;0;Bottom;Via11
+40;;;5.13193;-0.929081;0;Bottom;TXT6
+41;;RC-5325A [SMD];10.1015;-6.07312;-90;Top;TRRS1
+42;;;25.7544;-7.97265;0;Bottom;Via18
+43;;RC-5325A [SMD];40.354;-5.75704;0;Bottom;TRRS6
+44;;;23.8494;-10.5127;0;Bottom;Via16
+45;;THT;33.3745;-13.6876;90;Bottom;J4
+46;;THT;43.5345;-13.6876;90;Bottom;J3
+47;;;43.5333;-11.5457;0;Bottom;TXT6
+48;;;9.87937;-3.52765;0;Bottom;Via12
+49;;;37.8194;-6.70265;0;Bottom;Via6
+50;;;25.7544;-10.5127;0;Bottom;Via19

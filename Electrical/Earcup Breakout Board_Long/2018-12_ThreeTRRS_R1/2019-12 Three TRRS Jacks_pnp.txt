@@ -1,0 +1,54 @@
+*Pick And Place List
+*Company=
+*Author=
+*eMail=
+*
+*Project=2019-12 Three TRRS Jacks
+*Date=12:55:07
+*CreatedBy=Fritzing 0.9.3b.04.19.5c895d327c44a3114e5fcc9d8260daf0cbb52806
+*
+*
+*Coordinates in mm, always center of component
+*Origin 0/0=Lower left corner of PCB
+*Rotation in degree (0-360, math. pos.)
+*
+*No;Value;Package;X;Y;Rotation;Side;Name
+1;;RC-5325A [SMD];62.7184;-7.55944;0;Bottom;TRRS6
+2;;;58.9139;-8.60772;0;Bottom;Via12
+3;;;44.9439;-3.52772;0;Bottom;Hole4
+4;;;1.64506;-12.0538;0;Bottom;TXT3
+5;;;9.38389;-9.87772;0;Bottom;Via3
+6;;;60.1839;-13.6877;0;Bottom;Hole1
+7;;THT;27.1639;-7.33772;0;Bottom;J2
+8;;;4.30389;-3.52772;0;Bottom;Hole3
+9;;;52.5639;-2.25772;0;Bottom;Via10
+10;;RC-5325A [SMD];11.7223;-6.07319;90;Bottom;TRRS2
+11;;RC-5325A [SMD];36.3966;-6.07319;-90;Top;TRRS3
+12;;THT;4.30389;-7.33772;-90;Bottom;J7
+13;;;11.9239;-9.87772;0;Bottom;Via2
+14;;;44.714;-14.94;0;Bottom;TXT3
+15;;;61.4539;-7.33772;0;Bottom;Via11
+16;;;52.6725;-12.0124;0;Bottom;TXT1
+17;;;66.2517;-15.287;0;Bottom;TXT2
+18;;THT;4.30389;-9.87772;-90;Bottom;J6
+19;;THT;51.2939;-14.9577;-90;Bottom;J5
+20;;;24.6689;-12.2323;0;Bottom;TXT1
+21;;;14.4639;-6.06772;0;Bottom;Via1
+22;;;18.9577;-15.5547;0;Bottom;TXT3
+23;;;44.9439;-11.1477;0;Bottom;Hole5
+24;;;62.7239;-11.1477;0;Bottom;Via9
+25;;;1.52623;-4.68632;0;Bottom;TXT3
+26;;THT;24.6239;-14.9577;-90;Bottom;J4
+27;;;19.6571;-12.4054;0;Bottom;TXT1
+28;;;36.0539;-9.87772;0;Bottom;Via8
+29;;THT;50.0239;-7.33772;0;Bottom;J3
+30;;;39.8639;-6.06772;0;Bottom;Via6
+31;;THT;22.0839;-7.33772;0;Bottom;J1
+32;;;34.7839;-7.33772;0;Bottom;Via5
+33;;;32.2439;-9.87772;0;Bottom;Via7
+34;;RC-5325A [SMD];34.5823;-6.07319;90;Bottom;TRRS4
+35;;;66.43;-15.2558;0;Bottom;TXT2
+36;;RC-5325A [SMD];13.5366;-6.07319;-90;Top;TRRS1
+37;;;4.30389;-13.6877;0;Bottom;Hole2
+38;;;19.5439;-2.25772;0;Bottom;Via4
+39;;RC-5325A [SMD];62.7184;-5.846;180;Top;TRRS5
