@@ -1,5 +1,13 @@
 /*
-   HeartThru_Full_State_BTAudio
+   HeartThru with Bluetooth Audio
+
+   Created: Chip Audette, OpenAudio, March 2019
+   Purpose: Designed or use with OpenTact headsets and Tympan electronics.
+
+   Features:
+    * Electronic hear-thru with multiple algorithms
+    * Remote control via Android App
+    * Received audio over bluetooth
 
    MIT License.  use at your own risk.
 */
