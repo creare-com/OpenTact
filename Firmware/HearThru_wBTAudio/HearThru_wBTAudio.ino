@@ -383,4 +383,53 @@ void setAudioSlowComp(void) {
   inputSwitchL.setChannel(ALG_SLOWCOMP);  inputSwitchR.setChannel(ALG_SLOWCOMP);
 }
 
+void scaleCompressionSpeed(float scale_value, bool print_new_vals) {
+  switch (myState.alg) {
+    case ALG_LINEAR:
+      BOTH_SERIAL.println("LINEAR: Ignoring change command.");
+      break;
+   case ALG_FASTCOMP:
+      incrementAttackRelease(scale_value,fastCompL,fastCompR,print_new_vals);
+      //printAttackRelease(fastCompL);
+      break;
+   case ALG_SLOWCOMP:
+      incrementAttackRelease(scale_value,slowCompL,slowCompR,print_new_vals);
+      //printAttackRelease(slowCompL);
+  }
+}
+void incrementAttackRelease(float scale_value,AudioEffectCompWDRC_F32 &compL, AudioEffectCompWDRC_F32 &compR,bool print_new_vals) {
+  float attack_msec = compL.getAttack_msec();
+  float release_msec = compL.getRelease_msec();
+  float min_attack_msec = 2.0, min_release_msec = 50;
+  attack_msec = max(min_attack_msec,attack_msec*scale_value);
+  release_msec = max(min_release_msec,release_msec*scale_value);
+  compL.setAttackRelease_msec(attack_msec,release_msec);
+  compR.setAttackRelease_msec(attack_msec,release_msec);
+  if (print_new_vals) {
+    BOTH_SERIAL.print("Comp: "); BOTH_SERIAL.print((int)attack_msec); BOTH_SERIAL.print("ms attack, ");
+    BOTH_SERIAL.print((int)release_msec); BOTH_SERIAL.println("ms release");
+  }
+}
+void incrementKneepoint(float increment_dB,bool print_new_vals) {
+  switch (myState.alg) {
+    case ALG_LINEAR:
+      BOTH_SERIAL.println("LINEAR: Ignoring change command.");
+      break;
+   case ALG_FASTCOMP:
+      incrementKneepoint(increment_dB,fastCompL,fastCompR,print_new_vals);
+      break;
+   case ALG_SLOWCOMP:
+      incrementKneepoint(increment_dB,slowCompL,slowCompR,print_new_vals);
+  }
+}
+void incrementKneepoint(float increment_dB,AudioEffectCompWDRC_F32 &compL, AudioEffectCompWDRC_F32 &compR,bool print_new_vals) {
+  float knee_dB = compL.getKneeCompressor_dBSPL();
+  float min_knee_dB = 0.0;
+  knee_dB = max(min_knee_dB,knee_dB+increment_dB);
+  compL.setKneeCompressor_dBSPL(knee_dB);
+  compR.setKneeCompressor_dBSPL(knee_dB);
+  if (print_new_vals) {
+    BOTH_SERIAL.print("Comp: Kneepoint set to "); BOTH_SERIAL.print((int)knee_dB); BOTH_SERIAL.println("dB");
+  }
+}
 

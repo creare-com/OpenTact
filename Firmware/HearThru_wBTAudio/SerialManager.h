@@ -27,6 +27,8 @@ class SerialManager {
     void printGainSettings(void);
     void setButtonState(String btnId, bool newState);
     float gainIncrement_dB = 2.5f;
+    float compScaleFactor = 0.5; //twice as fast
+    float kneeIncrement_dB = 5.0f;
 
   private:
     TympanBase &audioHardware;
@@ -49,6 +51,10 @@ void SerialManager::printHelp(void) {
   audioHardware.println("   l: Processing: linear.");
   audioHardware.println("   k: Processing: Fast-compression.");
   audioHardware.println("   K: Processing: Slow-compression.");
+  audioHardware.println("   a: Compression: make 2x faster.");
+  audioHardware.println("   A: Compression: make 2x slower.");
+  audioHardware.println("   b: Compression: increase kneepoint.");
+  audioHardware.println("   B: Compression: decrease kneebpoint.");
   audioHardware.println("   p: SD: prepare for recording");
   audioHardware.println("   r: SD: begin recording");
   audioHardware.println("   s: SD: stop recording");
@@ -75,6 +81,8 @@ extern void setAudioStereo(void);
 extern void setAudioLinear(void);
 extern void setAudioFastComp(void);
 extern void setAudioSlowComp(void);
+extern void scaleCompressionSpeed(float,bool);
+extern void incrementKneepoint(float,bool);
 
 //Extern variables
 extern float vol_knob_gain_dB;
@@ -113,6 +121,22 @@ void SerialManager::respondToByte(char c) {
       incrementInputGain(-gainIncrement_dB);
       printGainSettings();
       break;
+    case 'a':
+      //increase compression speed (make it faster, so compSaleFactor should be less than 1.0)
+      scaleCompressionSpeed(compScaleFactor,true); //the "true" is to print out the new values
+      break;
+     case 'A':
+      //decrease compression speed (make it slower, so compSaleFactor should be greater than 1.0)
+      scaleCompressionSpeed(1.0/compScaleFactor,true); //the "true" is to print out the new values
+      break; 
+    case 'b':
+      //increase
+      incrementKneepoint(kneeIncrement_dB,true);   //the "true" is to print out the new values
+      break;
+    case 'B':
+      //decrease
+      incrementKneepoint(-kneeIncrement_dB,true);   //the "true" is to print out the new values
+      break;    
     case 'q':
       audioHardware.println("Received: Muting");
       setAudioMute();
@@ -201,7 +225,9 @@ void SerialManager::respondToByte(char c) {
               "{'name':'Select Input','buttons':[{'label': 'Headset Mics', 'cmd': 'W', 'id':'configHeadset'},{'label': 'PCB Mics', 'cmd': 'w', 'id': 'configPCB'}]},"
               "{'name':'Input Gain', 'buttons':[{'label': 'Less', 'cmd' :'I'},{'label': 'More', 'cmd': 'i'}]},"
               "{'name':'Record Mics to SD Card','buttons':[{'label': 'Prepare', 'cmd': 'p'},{'label': 'Start', 'cmd': 'r', 'id':'recordStart'},{'label': 'Stop', 'cmd': 's'}]},"
-              "{'name':'CPU Reporting', 'buttons':[{'label': 'Start', 'cmd' :'c','id':'cpuStart'},{'label': 'Stop', 'cmd': 'C'}]}"
+              "{'name':'CPU Reporting', 'buttons':[{'label': 'Start', 'cmd' :'c','id':'cpuStart'},{'label': 'Stop', 'cmd': 'C'}]},"
+              "{'name':'Compression: Attack and Release', 'buttons':[{'label': 'Slower','cmd':'A'},{'label':'Faster','cmd':'a'}]},"
+              "{'name':'Compression: Kneepoint','buttons':[{'label': 'Lower','cmd':'B'},{'label':'Higher','cmd':'b'}]}"
             "]}"                            
           "]"
         "}";
