@@ -17,8 +17,8 @@ class State_t {
 //now, define the Serial Manager class
 class SerialManager {
   public:
-    SerialManager(TympanBase &_audioHardware)
-      : audioHardware(_audioHardware)
+    SerialManager(Tympan &_myTympan)
+      : myTympan(_myTympan)
     {  };
 
     void respondToByte(char c);
@@ -31,37 +31,37 @@ class SerialManager {
     float kneeIncrement_dB = 5.0f;
 
   private:
-    TympanBase &audioHardware;
+    Tympan &myTympan;
 
 };
 
 void SerialManager::printHelp(void) {
-  audioHardware.println();
-  audioHardware.println("SerialManager Help: Available Commands:");
-  //audioHardware.println("   J: Print the JSON config object, for the Tympan Remote app");
-  //audioHardware.println("    j: Print the button state for the Tympan Remote app");
-  audioHardware.println("   C: Toggle printing of CPU and Memory usage");
-  audioHardware.println("   w: Switch Input to PCB Mics");
-  audioHardware.println("   W: Switch Input to Headset Mics");
-  audioHardware.print  ("   i: Input: Increase gain by "); audioHardware.print(gainIncrement_dB); audioHardware.println(" dB");
-  audioHardware.print  ("   I: Input: Decrease gain by "); audioHardware.print(gainIncrement_dB); audioHardware.println(" dB");
-  audioHardware.println("   q: Input: Mute");
-  audioHardware.println("   m: Input: Mono");
-  audioHardware.println("   M: Input: Stereo");
-  audioHardware.println("   l: Processing: linear.");
-  audioHardware.println("   k: Processing: Fast-compression.");
-  audioHardware.println("   K: Processing: Slow-compression.");
-  audioHardware.println("   a: Compression: make 2x faster.");
-  audioHardware.println("   A: Compression: make 2x slower.");
-  audioHardware.println("   b: Compression: increase kneepoint.");
-  audioHardware.println("   B: Compression: decrease kneebpoint.");
-  audioHardware.println("   p: SD: prepare for recording");
-  audioHardware.println("   r: SD: begin recording");
-  audioHardware.println("   s: SD: stop recording");
-  audioHardware.println("   h: Print this help");
+  myTympan.println();
+  myTympan.println("SerialManager Help: Available Commands:");
+  //myTympan.println("   J: Print the JSON config object, for the Tympan Remote app");
+  //myTympan.println("    j: Print the button state for the Tympan Remote app");
+  myTympan.println("   C: Toggle printing of CPU and Memory usage");
+  myTympan.println("   w: Switch Input to PCB Mics");
+  myTympan.println("   W: Switch Input to Headset Mics");
+  myTympan.print  ("   i: Input: Increase gain by "); myTympan.print(gainIncrement_dB); myTympan.println(" dB");
+  myTympan.print  ("   I: Input: Decrease gain by "); myTympan.print(gainIncrement_dB); myTympan.println(" dB");
+  myTympan.println("   q: Input: Mute");
+  myTympan.println("   m: Input: Mono");
+  myTympan.println("   M: Input: Stereo");
+  myTympan.println("   l: Processing: linear.");
+  myTympan.println("   k: Processing: Fast-compression.");
+  myTympan.println("   K: Processing: Slow-compression.");
+  myTympan.println("   a: Compression: make 2x faster.");
+  myTympan.println("   A: Compression: make 2x slower.");
+  myTympan.println("   b: Compression: increase kneepoint.");
+  myTympan.println("   B: Compression: decrease kneebpoint.");
+  myTympan.println("   p: SD: prepare for recording");
+  myTympan.println("   r: SD: begin recording");
+  myTympan.println("   s: SD: stop recording");
+  myTympan.println("   h: Print this help");
 
 
-  audioHardware.println();
+  myTympan.println();
 }
 
 
@@ -104,12 +104,12 @@ void SerialManager::respondToByte(char c) {
     case 'h': case '?':
       printHelp(); break;
     case 'c':
-      audioHardware.println("Received: start CPU reporting");
+      myTympan.println("Received: start CPU reporting");
       setPrintMemoryAndCPU(true);
       setButtonState("cpuStart",true);
       break;
     case 'C':
-      audioHardware.println("Received: stop CPU reporting");
+      myTympan.println("Received: stop CPU reporting");
       setPrintMemoryAndCPU(false);
       setButtonState("cpuStart",false);
       break;
@@ -138,70 +138,70 @@ void SerialManager::respondToByte(char c) {
       incrementKneepoint(-kneeIncrement_dB,true);   //the "true" is to print out the new values
       break;    
     case 'q':
-      audioHardware.println("Received: Muting");
+      myTympan.println("Received: Muting");
       setAudioMute();
       setButtonState("mute",true);delay(20);
       setButtonState("mono",false);delay(20);
       setButtonState("stereo",false);
       break;
     case 'm':
-      audioHardware.println("Received: Mono");
+      myTympan.println("Received: Mono");
       setAudioMono();
       setButtonState("mute",false);delay(20);
       setButtonState("mono",true);delay(20);
       setButtonState("stereo",false);
       break;      
     case 'M':
-      audioHardware.println("Received: Stereo");
+      myTympan.println("Received: Stereo");
       setAudioStereo();
       setButtonState("mute",false);delay(20);
       setButtonState("mono",false);delay(20);
       setButtonState("stereo",true);
       break;
     case  'l':
-      audioHardware.println("Received: Linear processing");
+      myTympan.println("Received: Linear processing");
       setAudioLinear();
       setButtonState("linear",true);delay(20);
       setButtonState("fast",false);delay(20);
       setButtonState("slow",false);
       break;
     case 'k':
-      audioHardware.println("Received: Fast compression");
+      myTympan.println("Received: Fast compression");
       setAudioFastComp();
       setButtonState("linear",false);delay(20);
       setButtonState("fast",true);delay(20);
       setButtonState("slow",false);
       break;
     case 'K':
-      audioHardware.println("Received: Slow compression");
+      myTympan.println("Received: Slow compression");
       setAudioSlowComp();
       setButtonState("linear",false);delay(20);
       setButtonState("fast",false);delay(20);
       setButtonState("slow",true);
       break;
     case 'w':
-      audioHardware.println("Received: PCB Mics");
+      myTympan.println("Received: PCB Mics");
       setConfiguration(INPUT_PCBMICS);
       setButtonState("configPCB",true);
       setButtonState("configHeadset",false);
       break;
     case 'W':
-      audioHardware.println("Recevied: Headset Mics.");
+      myTympan.println("Recevied: Headset Mics.");
       setConfiguration(INPUT_MICJACK);
       setButtonState("configPCB",false);
       setButtonState("configHeadset",true);
       break;
     case 'p':
-      audioHardware.println("Received: prepare SD for recording");
+      myTympan.println("Received: prepare SD for recording");
       prepareSDforRecording();
       break;
     case 'r':
-      audioHardware.println("Received: begin SD recording");
+      myTympan.println("Received: begin SD recording");
       beginRecordingProcess();
       setButtonState("recordStart",true);
       break;
     case 's':
-      audioHardware.println("Received: stop SD recording");
+      myTympan.println("Received: stop SD recording");
       stopRecording();
       setButtonState("recordStart",false);
       break;
@@ -231,7 +231,7 @@ void SerialManager::respondToByte(char c) {
             "]}"                            
           "]"
         "}";
-        audioHardware.println(jsonConfig);
+        myTympan.println(jsonConfig);
         delay(100);
         printFullGUIState();
         break;
@@ -287,18 +287,18 @@ void SerialManager::printFullGUIState(void) {
 }
 
 void SerialManager::printGainSettings(void) {
-  audioHardware.print("Vol Knob = ");
-  audioHardware.print(vol_knob_gain_dB, 1);
-  audioHardware.print(", Input PGA = ");
-  audioHardware.print(input_gain_dB, 1);
-  audioHardware.println();
+  myTympan.print("Vol Knob = ");
+  myTympan.print(vol_knob_gain_dB, 1);
+  myTympan.print(", Input PGA = ");
+  myTympan.print(input_gain_dB, 1);
+  myTympan.println();
 }
 
 void SerialManager::setButtonState(String btnId, bool newState) {
   if (newState) {
-    audioHardware.println("STATE=BTN:" + btnId + ":1");
+    myTympan.println("STATE=BTN:" + btnId + ":1");
   } else {
-    audioHardware.println("STATE=BTN:" + btnId + ":0");
+    myTympan.println("STATE=BTN:" + btnId + ":0");
   }
 }
 

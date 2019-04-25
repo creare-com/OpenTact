@@ -10,8 +10,8 @@
 extern AudioSettings_F32 audio_settings;
 extern AudioInputI2S_F32 i2s_in;
 extern AudioRecordQueue_F32 queueL, queueR;
-extern TympanBase audioHardware;
-#define BOTH_SERIAL audioHardware
+extern Tympan myTympan;
+#define BOTH_SERIAL myTympan
 
 //variables to control printing of warnings and timings and whatnot
 #define PRINT_OVERRUN_WARNING 1   //set to 1 to print a warning that the there's been a hiccup in the writing to the SD.
@@ -168,7 +168,7 @@ void startRecording(void) {
     if (my_SD_writer.open(fname)) {
       BOTH_SERIAL.print("startRecording: Opened "); BOTH_SERIAL.print(fname); BOTH_SERIAL.println(" on SD for writing.");
       queueL.begin(); queueR.begin();
-      //audioHardware.setRedLED(LOW); audioHardware.setAmberLED(HIGH); //Turn ON the Amber LED
+      //myTympan.setRedLED(LOW); myTympan.setAmberLED(HIGH); //Turn ON the Amber LED
       recording_start_time_msec = millis();
       current_SD_state = STATE_RECORDING;
     } else {
@@ -196,7 +196,7 @@ void stopRecording(void) {
       BOTH_SERIAL.println("stopRecording: Closing SD File...");
       my_SD_writer.close();
       queueL.end();  queueR.end();
-      //audioHardware.setRedLED(HIGH); audioHardware.setAmberLED(LOW); //Turn OFF the Amber LED
+      //myTympan.setRedLED(HIGH); myTympan.setAmberLED(LOW); //Turn OFF the Amber LED
       current_SD_state = STATE_STOPPED;
   }
 }

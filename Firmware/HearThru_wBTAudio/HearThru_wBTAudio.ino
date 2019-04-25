@@ -50,8 +50,7 @@ BC127 BTModu(&Serial1); //which serial is connected to the BT module? Serial1 is
 // /////////// Define audio objects...they are configured later
 
 //create audio library objects for handling the audio
-TympanPins                    tympPins(TYMPAN_REV_D3);        //TYMPAN_REV_C or TYMPAN_REV_D
-TympanBase                    audioHardware(tympPins);
+Tympan                        myTympan(TympanRev::D3);
 AudioInputI2S_F32             i2s_in(audio_settings);   //Digital audio input from the ADC
 AudioRecordQueue_F32          queueL(audio_settings),       queueR(audio_settings);     //gives access to audio data (will use for SD card)
 AudioMixer4_F32               inputMixerL(audio_settings),  inputMixerR(audio_settings);
@@ -138,8 +137,8 @@ void setPrintMemoryAndCPU(bool state) { enable_printCPUandMemory = state; };
 bool enable_printAveSignalLevels = false;
 bool printAveSignalLevels_as_dBSPL = false;
 void togglePrintAveSignalLevels(bool as_dBSPL) { enable_printAveSignalLevels = !enable_printAveSignalLevels; printAveSignalLevels_as_dBSPL = as_dBSPL;};
-SerialManager serialManager(audioHardware);
-#define BOTH_SERIAL audioHardware
+SerialManager serialManager(myTympan);
+#define BOTH_SERIAL myTympan
 
 //keep track of state
 State_t myState;
@@ -147,17 +146,17 @@ State_t myState;
 int current_config = 0;
 void setConfiguration(int config) { 
   
-  audioHardware.volume_dB(-60.0); delay(50);  //mute the output audio
+  myTympan.volume_dB(-60.0); delay(50);  //mute the output audio
   myState.input_source = config;
   
   switch (config) {
     case INPUT_PCBMICS:
       //Select Input
-      audioHardware.inputSelect(TYMPAN_INPUT_ON_BOARD_MIC); // use the on-board microphones
+      myTympan.inputSelect(TYMPAN_INPUT_ON_BOARD_MIC); // use the on-board microphones
 
       //Set input gain to 0dB
       input_gain_dB = 15;
-      audioHardware.setInputGain_dB(input_gain_dB);
+      myTympan.setInputGain_dB(input_gain_dB);
 
       //Store configuration
       current_config = INPUT_PCBMICS;
@@ -165,12 +164,12 @@ void setConfiguration(int config) {
       
     case INPUT_MICJACK:
       //Select Input
-      audioHardware.inputSelect(TYMPAN_INPUT_JACK_AS_MIC); // use the mic jack
-      audioHardware.setEnableStereoExtMicBias(true);
+      myTympan.inputSelect(TYMPAN_INPUT_JACK_AS_MIC); // use the mic jack
+      myTympan.setEnableStereoExtMicBias(true);
 
       //Set input gain to 0dB
       input_gain_dB = default_input_gain_dB;
-      audioHardware.setInputGain_dB(input_gain_dB);
+      myTympan.setInputGain_dB(input_gain_dB);
 
       //Store configuration
       current_config = INPUT_MICJACK;
@@ -178,11 +177,11 @@ void setConfiguration(int config) {
       
     case INPUT_LINEIN_SE:
       //Select Input
-      audioHardware.inputSelect(TYMPAN_INPUT_LINE_IN); // use the line-input through holes
+      myTympan.inputSelect(TYMPAN_INPUT_LINE_IN); // use the line-input through holes
 
       //Set input gain to 0dB
       input_gain_dB = default_input_gain_dB;
-      audioHardware.setInputGain_dB(input_gain_dB);
+      myTympan.setInputGain_dB(input_gain_dB);
 
       //Store configuration
       current_config = INPUT_LINEIN_SE;
@@ -190,7 +189,7 @@ void setConfiguration(int config) {
   }
 
   //bring the output volume back up
-  delay(50);  audioHardware.volume_dB(output_volume_dB);  // output amp: -63.6 to +24 dB in 0.5dB steps.  uses signed 8-bit
+  delay(50);  myTympan.volume_dB(output_volume_dB);  // output amp: -63.6 to +24 dB in 0.5dB steps.  uses signed 8-bit
 }
 
 // ///////////////// Main setup() and loop() as required for all Arduino programs
@@ -199,7 +198,7 @@ void setConfiguration(int config) {
 void setup() {
   delay(100);
   
-  audioHardware.beginBothSerial(); delay(1000);
+  myTympan.beginBothSerial(); delay(1000);
   BOTH_SERIAL.print(overall_name);BOTH_SERIAL.println(": setup():...");
   BOTH_SERIAL.print("Sample Rate (Hz): "); BOTH_SERIAL.println(audio_settings.sample_rate_Hz);
   BOTH_SERIAL.print("Audio Block Size (samples): "); BOTH_SERIAL.println(audio_settings.audio_block_samples);
@@ -209,12 +208,12 @@ void setup() {
   BOTH_SERIAL.println("Setup: memory allocated.");
   
   //activate the Tympan audio hardware
-  audioHardware.enable();        // activate AIC
+  myTympan.enable();        // activate AIC
   
   //temporariliy mute the system
-  audioHardware.volume_dB(-60.0);  // output amp: -63.6 to +24 dB in 0.5dB steps.  uses signed 8-bit
+  myTympan.volume_dB(-60.0);  // output amp: -63.6 to +24 dB in 0.5dB steps.  uses signed 8-bit
   float cutoff_Hz = 70.0;  //set the default cutoff frequency for the highpass filter
-  audioHardware.setHPFonADC(true, cutoff_Hz, audio_settings.sample_rate_Hz); //set to false to disble
+  myTympan.setHPFonADC(true, cutoff_Hz, audio_settings.sample_rate_Hz); //set to false to disble
 
   //setup the audio processing
   setAlgorithmParameters();
@@ -232,7 +231,7 @@ void setup() {
   serviceBTAudio();
 
   //Set the Bluetooth audio to go straight to the headphone amp, not through the Tympan software
-  audioHardware.mixBTAudioWithOutput(true);
+  myTympan.mixBTAudioWithOutput(true);
 
   //End of setup
   BOTH_SERIAL.println("Setup: complete.");serialManager.printHelp();
@@ -334,11 +333,11 @@ void printCPUandMemoryMessage(void) {
 
 void serviceLEDs(void) {
   if (current_SD_state == STATE_UNPREPARED) {
-    audioHardware.setRedLED(HIGH); audioHardware.setAmberLED(HIGH); //Turn ON both
+    myTympan.setRedLED(HIGH); myTympan.setAmberLED(HIGH); //Turn ON both
   } else if (current_SD_state == STATE_RECORDING) {
-    audioHardware.setRedLED(LOW); audioHardware.setAmberLED(HIGH); //Go Amber
+    myTympan.setRedLED(LOW); myTympan.setAmberLED(HIGH); //Go Amber
   } else {
-    audioHardware.setRedLED(HIGH); audioHardware.setAmberLED(LOW); //Go Red
+    myTympan.setRedLED(HIGH); myTympan.setAmberLED(LOW); //Go Red
   }
 }
 
@@ -350,7 +349,7 @@ void incrementInputGain(float increment_dB) {
     BOTH_SERIAL.println("Setting input gain to 0 dB.");
     input_gain_dB = 0.0;
   }
-  audioHardware.setInputGain_dB(input_gain_dB);
+  myTympan.setInputGain_dB(input_gain_dB);
 }
 
 
