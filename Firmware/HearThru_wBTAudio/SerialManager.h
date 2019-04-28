@@ -14,12 +14,44 @@ class State_t {
     int alg = NO_STATE;
 };
 
+//Extern variables
+extern Tympan myTympan;
+extern SDAudioWriter_F32asI16 stereoSDWriter;
+extern float vol_knob_gain_dB;
+extern float input_gain_dB;
+extern State_t myState;
+extern const int INPUT_PCBMICS;
+extern const int INPUT_MICJACK;
+extern const int INPUT_LINEIN_SE;
+extern const int AUDIO_MUTE;
+extern const int AUDIO_MONO;
+extern const int AUDIO_STEREO;
+extern const int ALG_LINEAR;
+extern const int ALG_FASTCOMP;
+extern const int ALG_SLOWCOMP;
+
+//Extern Functions
+extern void setConfiguration(int);
+extern void togglePrintMemoryAndCPU(void);
+extern void setPrintMemoryAndCPU(bool);
+//extern void togglePrintAveSignalLevels(bool);
+//extern void beginRecordingProcess(void);
+//extern void stopRecording(void);
+extern void incrementInputGain(float);
+//extern void prepareSDforRecording(void);
+extern void setAudioMute(void);
+extern void setAudioMono(void);
+extern void setAudioStereo(void);
+extern void setAudioLinear(void);
+extern void setAudioFastComp(void);
+extern void setAudioSlowComp(void);
+extern void scaleCompressionSpeed(float,bool);
+extern void incrementKneepoint(float,bool);
+
 //now, define the Serial Manager class
 class SerialManager {
   public:
-    SerialManager(Tympan &_myTympan)
-      : myTympan(_myTympan)
-    {  };
+    SerialManager(void) {  };
 
     void respondToByte(char c);
     void printHelp(void);
@@ -31,7 +63,6 @@ class SerialManager {
     float kneeIncrement_dB = 5.0f;
 
   private:
-    Tympan &myTympan;
 
 };
 
@@ -64,39 +95,6 @@ void SerialManager::printHelp(void) {
   myTympan.println();
 }
 
-
-
-//Extern Functions
-extern void setConfiguration(int config);
-extern void togglePrintMemoryAndCPU(void);
-extern void setPrintMemoryAndCPU(bool);
-//extern void togglePrintAveSignalLevels(bool);
-extern void beginRecordingProcess(void);
-extern void stopRecording(void);
-extern void incrementInputGain(float);
-extern void prepareSDforRecording(void);
-extern void setAudioMute(void);
-extern void setAudioMono(void);
-extern void setAudioStereo(void);
-extern void setAudioLinear(void);
-extern void setAudioFastComp(void);
-extern void setAudioSlowComp(void);
-extern void scaleCompressionSpeed(float,bool);
-extern void incrementKneepoint(float,bool);
-
-//Extern variables
-extern float vol_knob_gain_dB;
-extern float input_gain_dB;
-extern State_t myState;
-extern const int INPUT_PCBMICS;
-extern const int INPUT_MICJACK;
-extern const int INPUT_LINEIN_SE;
-extern const int AUDIO_MUTE;
-extern const int AUDIO_MONO;
-extern const int AUDIO_STEREO;
-extern const int ALG_LINEAR;
-extern const int ALG_FASTCOMP;
-extern const int ALG_SLOWCOMP;
 
 //switch yard to determine the desired action
 void SerialManager::respondToByte(char c) {
@@ -193,16 +191,18 @@ void SerialManager::respondToByte(char c) {
       break;
     case 'p':
       myTympan.println("Received: prepare SD for recording");
-      prepareSDforRecording();
+      //prepareSDforRecording();
+      stereoSDWriter.prepareSDforRecording();
       break;
     case 'r':
       myTympan.println("Received: begin SD recording");
-      beginRecordingProcess();
+      //beginRecordingProcess();
+      stereoSDWriter.startRecording();
       setButtonState("recordStart",true);
       break;
     case 's':
       myTympan.println("Received: stop SD recording");
-      stopRecording();
+      stereoSDWriter.stopRecording();
       setButtonState("recordStart",false);
       break;
     case 'J':

@@ -50,9 +50,10 @@ BC127 BTModu(&Serial1); //which serial is connected to the BT module? Serial1 is
 // /////////// Define audio objects...they are configured later
 
 //create audio library objects for handling the audio
-Tympan                        myTympan(TympanRev::D3);
+Tympan                        myTympan(TympanRev::D);
 AudioInputI2S_F32             i2s_in(audio_settings);   //Digital audio input from the ADC
-AudioRecordQueue_F32          queueL(audio_settings),       queueR(audio_settings);     //gives access to audio data (will use for SD card)
+//AudioRecordQueue_F32          queueL(audio_settings),       queueR(audio_settings);     //gives access to audio data (will use for SD card)
+SDAudioWriter_F32asI16        stereoSDWriter(audio_settings);
 AudioMixer4_F32               inputMixerL(audio_settings),  inputMixerR(audio_settings);
 //AudioFilterBiquad_F32         iirLeft(audio_settings),      iirRight(audio_settings);           //xy=233,172
 AudioSwitch4_F32              inputSwitchL(audio_settings), inputSwitchR(audio_settings); //for switching between the algorithms
@@ -62,8 +63,8 @@ AudioMixer4_F32               outputMixerL(audio_settings), outputMixerR(audio_s
 AudioOutputI2S_F32            i2s_out(audio_settings);  //Digital audio output to the DAC.  Should always be last.
   
 //Connect Left & Right Input Channel to Left and Right SD card queue
-AudioConnection_F32           patchcord1(i2s_in, 0, queueL, 0);   //connect Raw audio to queue (to enable SD writing)
-AudioConnection_F32           patchcord2(i2s_in, 1, queueR, 0);  //connect Raw audio to queue (to enable SD writing)
+AudioConnection_F32           patchcord1(i2s_in, 0, stereoSDWriter, 0);   //connect Raw audio to left channel of SD writer
+AudioConnection_F32           patchcord2(i2s_in, 1, stereoSDWriter, 1);  //connect Raw audio to right channel of SD writer
 
 //AUDIO CONNECTIONS...start with inputs
 AudioConnection_F32           patchcord3(i2s_in, 0, inputMixerL, 0);     //Left audio to Left mixer 
@@ -96,7 +97,6 @@ AudioConnection_F32           patchcord303(slowCompR,0,outputMixerR,ALG_SLOWCOMP
 //Connect to outputs
 AudioConnection_F32           patchcord500(outputMixerL, 0, i2s_out, 0);    //Left mixer to left output
 AudioConnection_F32           patchcord501(outputMixerR, 0, i2s_out, 1);    //Right mixer to right output
-
 
 void setAlgorithmParameters(void) {
   { 
@@ -233,6 +233,10 @@ void setup() {
   //Set the Bluetooth audio to go straight to the headphone amp, not through the Tympan software
   myTympan.mixBTAudioWithOutput(true);
 
+  //prepare serial comms for SD messages to user
+ stereoSDWriter.setSerial(&myTympan);
+ 
+
   //End of setup
   BOTH_SERIAL.println("Setup: complete.");serialManager.printHelp();
 
@@ -332,15 +336,65 @@ void printCPUandMemoryMessage(void) {
 }
 
 void serviceLEDs(void) {
-  if (current_SD_state == STATE_UNPREPARED) {
+  if (stereoSDWriter.getState() == SDAudioWriter::STATE::UNPREPARED) {
     myTympan.setRedLED(HIGH); myTympan.setAmberLED(HIGH); //Turn ON both
-  } else if (current_SD_state == STATE_RECORDING) {
+  } else if (stereoSDWriter.getState() == SDAudioWriter::STATE::RECORDING) {
     myTympan.setRedLED(LOW); myTympan.setAmberLED(HIGH); //Go Amber
   } else {
     myTympan.setRedLED(HIGH); myTympan.setAmberLED(LOW); //Go Red
   }
 }
 
+void serviceSD(void) {
+  if (stereoSDWriter.isFileOpen()) {
+    AudioRecordQueue_F32 *queueL = &stereoSDWriter.queueL, *queueR = &stereoSDWriter.queueR;
+    
+    //if audio data is ready, write it to SD
+    if ((queueL->available()) && (queueR->available())) {
+      audio_block_f32_t *left = queueL->getAudioBlock(), *right = queueR->getAudioBlock();
+      stereoSDWriter.interleaveAndWrite(
+              left->data,    //float32 array for left audio channel
+              right->data,   //float32 array for right audio channel
+              left->length); //number of samples in each channel
+      queueL->freeBuffer(); queueR->freeBuffer();  //free up these blocks now that they are written
+
+      //print a warning if there has been an SD writing hiccup
+      if (PRINT_OVERRUN_WARNING) {
+        if (queueL->getOverrun() || queueR->getOverrun() || i2s_in.get_isOutOfMemory()) {
+          float blocksPerSecond = (left->fs_Hz) / ((float)(left->length));
+          BOTH_SERIAL.print("SD Write Warning: there was a hiccup in the writing.  Approx Time (sec): ");
+          BOTH_SERIAL.println( ((float)stereoSDWriter.getNBlocksWritten()) / blocksPerSecond );
+        }
+      }
+
+      //print timing information to help debug hiccups in the audio.  Are the writes fast enough?  Are there overruns?
+      if (PRINT_FULL_SD_TIMING) {
+        Serial.print("SD Write Status: "); 
+        Serial.print(queueL->getOverrun()); //zero means no overrun
+        Serial.print(", ");
+        Serial.print(queueR->getOverrun()); //zero means no overrun
+        Serial.print(", ");
+        Serial.print(AudioMemoryUsageMax_F32());  //hopefully, is less than MAX_F32_BLOCKS
+        //Serial.print(", ");
+        //Serial.print(MAX_F32_BLOCKS);  // max possible memory allocation
+        Serial.print(", ");
+        Serial.println(i2s_in.get_isOutOfMemory());  //zero means i2s_input always had memory to work with.  Non-zero means it ran out at least once.
+        
+        //Now that we've read the flags, reset them.
+        AudioMemoryUsageMaxReset_F32();
+      }
+
+      queueL->clearOverrun();
+      queueR->clearOverrun();
+      i2s_in.clear_isOutOfMemory();
+    }
+  } else {
+    //no SD recording currently, so no SD action
+  }
+}
+
+
+// //////////////////////////////////// Control the audio processing from the SerialManager
 //here's a function to change the volume settings.   We'll also invoke it from our serialManager
 void incrementInputGain(float increment_dB) {
   input_gain_dB += increment_dB;
@@ -352,8 +406,6 @@ void incrementInputGain(float increment_dB) {
   myTympan.setInputGain_dB(input_gain_dB);
 }
 
-
-// //////////////////////////////////// Control the audio processing from the SerialManager
 void setAudioMute(void) {
   myState.audio = AUDIO_MUTE;
   inputMixerL.gain(0, 0.0);      inputMixerL.gain(1, 0.0); //mute left and right input to left side
