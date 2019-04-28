@@ -6,7 +6,6 @@
 */
 
 //variables to control printing of warnings and timings and whatnot
-#define PRINT_OVERRUN_WARNING 1   //set to 1 to print a warning that the there's been a hiccup in the writing to the SD.
 #define PRINT_FULL_SD_TIMING 0    //set to 1 to print timing information of *every* write operation.  Great for logging to file.  Bad for real-time human reading.
 
 ////////////////////////////////////////////////////////////
@@ -454,10 +453,33 @@ class SDAudioWriter_F32asI16 : public SDArrayWriter_I16 , public SDAudioWriter, 
       queueL.update(receiveReadOnly_f32(0));
       queueR.update(receiveReadOnly_f32(1));
     }
-    AudioRecordQueue_F32 queueL, queueR;
+
+    //this is what pulls data from the queues and sends to SD for writing.
+    //should be invoked from loop(), not from an ISR
+    virtual int serviceSD(void) {
+      int return_val = 0;
+      //is the SD subsystem ready to write?
+      if (isFileOpen()) {        
+        //if audio data is ready, write it to SD
+        if ((queueL.available()) && (queueR.available())) {
+          audio_block_f32_t *left = queueL.getAudioBlock(), *right = queueR.getAudioBlock();
+          interleaveAndWrite(
+                  left->data,    //float32 array for left audio channel
+                  right->data,   //float32 array for right audio channel
+                  left->length); //number of samples in each channel
+          queueL.freeBuffer(); queueR.freeBuffer();  //free up these blocks now that they are written
+          return return_val = 1;
+        
+        }
+      }
+      return return_val;
+    }
+    bool getQueueOverrun(void) { return (queueL.getOverrun() || queueR.getOverrun()); }
+    void clearQueueOverrun(void) { queueL.clearOverrun(); queueR.clearOverrun();}
     
   protected:
     audio_block_f32_t *inputQueueArray[2]; //two input channels
+    AudioRecordQueue_F32 queueL, queueR;
 };
 
 

@@ -62,10 +62,6 @@ AudioEffectCompWDRC_F32       slowCompL(audio_settings),    slowCompR(audio_sett
 AudioMixer4_F32               outputMixerL(audio_settings), outputMixerR(audio_settings);  // for mixing together the diff algorithms
 AudioOutputI2S_F32            i2s_out(audio_settings);  //Digital audio output to the DAC.  Should always be last.
   
-//Connect Left & Right Input Channel to Left and Right SD card queue
-AudioConnection_F32           patchcord1(i2s_in, 0, stereoSDWriter, 0);   //connect Raw audio to left channel of SD writer
-AudioConnection_F32           patchcord2(i2s_in, 1, stereoSDWriter, 1);  //connect Raw audio to right channel of SD writer
-
 //AUDIO CONNECTIONS...start with inputs
 AudioConnection_F32           patchcord3(i2s_in, 0, inputMixerL, 0);     //Left audio to Left mixer 
 AudioConnection_F32           patchcord4(i2s_in, 1, inputMixerL, 1);     //Right audio to Left mixer 
@@ -97,6 +93,10 @@ AudioConnection_F32           patchcord303(slowCompR,0,outputMixerR,ALG_SLOWCOMP
 //Connect to outputs
 AudioConnection_F32           patchcord500(outputMixerL, 0, i2s_out, 0);    //Left mixer to left output
 AudioConnection_F32           patchcord501(outputMixerR, 0, i2s_out, 1);    //Right mixer to right output
+
+//Connect to SD logging
+AudioConnection_F32           patchcord600(i2s_in, 0, stereoSDWriter, 0);   //connect Raw audio to left channel of SD writer
+AudioConnection_F32           patchcord601(i2s_in, 1, stereoSDWriter, 1);   //connect Raw audio to right channel of SD writer
 
 void setAlgorithmParameters(void) {
   { 
@@ -137,7 +137,7 @@ void setPrintMemoryAndCPU(bool state) { enable_printCPUandMemory = state; };
 bool enable_printAveSignalLevels = false;
 bool printAveSignalLevels_as_dBSPL = false;
 void togglePrintAveSignalLevels(bool as_dBSPL) { enable_printAveSignalLevels = !enable_printAveSignalLevels; printAveSignalLevels_as_dBSPL = as_dBSPL;};
-SerialManager serialManager(myTympan);
+SerialManager serialManager;
 #define BOTH_SERIAL myTympan
 
 //keep track of state
@@ -345,49 +345,37 @@ void serviceLEDs(void) {
   }
 }
 
+#define PRINT_OVERRUN_WARNING 1   //set to 1 to print a warning that the there's been a hiccup in the writing to the SD.
 void serviceSD(void) {
-  if (stereoSDWriter.isFileOpen()) {
-    AudioRecordQueue_F32 *queueL = &stereoSDWriter.queueL, *queueR = &stereoSDWriter.queueR;
-    
-    //if audio data is ready, write it to SD
-    if ((queueL->available()) && (queueR->available())) {
-      audio_block_f32_t *left = queueL->getAudioBlock(), *right = queueR->getAudioBlock();
-      stereoSDWriter.interleaveAndWrite(
-              left->data,    //float32 array for left audio channel
-              right->data,   //float32 array for right audio channel
-              left->length); //number of samples in each channel
-      queueL->freeBuffer(); queueR->freeBuffer();  //free up these blocks now that they are written
-
-      //print a warning if there has been an SD writing hiccup
-      if (PRINT_OVERRUN_WARNING) {
-        if (queueL->getOverrun() || queueR->getOverrun() || i2s_in.get_isOutOfMemory()) {
-          float blocksPerSecond = (left->fs_Hz) / ((float)(left->length));
-          BOTH_SERIAL.print("SD Write Warning: there was a hiccup in the writing.  Approx Time (sec): ");
-          BOTH_SERIAL.println( ((float)stereoSDWriter.getNBlocksWritten()) / blocksPerSecond );
-        }
+  if (stereoSDWriter.serviceSD()) {
+    //if we're here, data was written to the SD, so do some checking of the timing...
+  
+    //print a warning if there has been an SD writing hiccup
+    if (PRINT_OVERRUN_WARNING) {
+      if (stereoSDWriter.getQueueOverrun() || i2s_in.get_isOutOfMemory()) {
+        float blocksPerSecond = ((float)audio_settings.sample_rate_Hz) / ((float)(audio_settings.audio_block_samples));
+        BOTH_SERIAL.print("SD Write Warning: there was a hiccup in the writing.  Approx Time (sec): ");
+        BOTH_SERIAL.println( ((float)stereoSDWriter.getNBlocksWritten()) / blocksPerSecond );
       }
-
-      //print timing information to help debug hiccups in the audio.  Are the writes fast enough?  Are there overruns?
-      if (PRINT_FULL_SD_TIMING) {
-        Serial.print("SD Write Status: "); 
-        Serial.print(queueL->getOverrun()); //zero means no overrun
-        Serial.print(", ");
-        Serial.print(queueR->getOverrun()); //zero means no overrun
-        Serial.print(", ");
-        Serial.print(AudioMemoryUsageMax_F32());  //hopefully, is less than MAX_F32_BLOCKS
-        //Serial.print(", ");
-        //Serial.print(MAX_F32_BLOCKS);  // max possible memory allocation
-        Serial.print(", ");
-        Serial.println(i2s_in.get_isOutOfMemory());  //zero means i2s_input always had memory to work with.  Non-zero means it ran out at least once.
-        
-        //Now that we've read the flags, reset them.
-        AudioMemoryUsageMaxReset_F32();
-      }
-
-      queueL->clearOverrun();
-      queueR->clearOverrun();
-      i2s_in.clear_isOutOfMemory();
     }
+
+    //print timing information to help debug hiccups in the audio.  Are the writes fast enough?  Are there overruns?
+    if (PRINT_FULL_SD_TIMING) {
+      Serial.print("SD Write Status: "); 
+      Serial.print(stereoSDWriter.getQueueOverrun()); //zero means no overrun
+      Serial.print(", ");
+      Serial.print(AudioMemoryUsageMax_F32());  //hopefully, is less than MAX_F32_BLOCKS
+      //Serial.print(", ");
+      //Serial.print(MAX_F32_BLOCKS);  // max possible memory allocation
+      Serial.print(", ");
+      Serial.println(i2s_in.get_isOutOfMemory());  //zero means i2s_input always had memory to work with.  Non-zero means it ran out at least once.
+      
+      //Now that we've read the flags, reset them.
+      AudioMemoryUsageMaxReset_F32();
+    }
+    
+    stereoSDWriter.clearQueueOverrun();
+    i2s_in.clear_isOutOfMemory();
   } else {
     //no SD recording currently, so no SD action
   }
