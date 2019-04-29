@@ -24,7 +24,7 @@ const int INPUT_PCBMICS=0, INPUT_MICJACK=1,INPUT_LINEIN_SE=2;
 
 
 //local files
-#include "SDAudioWriter.h" 
+#include "AudioSDWriter.h" 
 #include "SerialManager.h"
 
 //definitions for SD writing
@@ -53,7 +53,7 @@ BC127 BTModu(&Serial1); //which serial is connected to the BT module? Serial1 is
 Tympan                        myTympan(TympanRev::D);
 AudioInputI2S_F32             i2s_in(audio_settings);   //Digital audio input from the ADC
 //AudioRecordQueue_F32          queueL(audio_settings),       queueR(audio_settings);     //gives access to audio data (will use for SD card)
-SDAudioWriter_F32asI16        stereoSDWriter(audio_settings);
+AudioSDWriter_F32             audioSDWriter(audio_settings);
 AudioMixer4_F32               inputMixerL(audio_settings),  inputMixerR(audio_settings);
 //AudioFilterBiquad_F32         iirLeft(audio_settings),      iirRight(audio_settings);           //xy=233,172
 AudioSwitch4_F32              inputSwitchL(audio_settings), inputSwitchR(audio_settings); //for switching between the algorithms
@@ -95,8 +95,8 @@ AudioConnection_F32           patchcord500(outputMixerL, 0, i2s_out, 0);    //Le
 AudioConnection_F32           patchcord501(outputMixerR, 0, i2s_out, 1);    //Right mixer to right output
 
 //Connect to SD logging
-AudioConnection_F32           patchcord600(i2s_in, 0, stereoSDWriter, 0);   //connect Raw audio to left channel of SD writer
-AudioConnection_F32           patchcord601(i2s_in, 1, stereoSDWriter, 1);   //connect Raw audio to right channel of SD writer
+AudioConnection_F32           patchcord600(i2s_in, 0, audioSDWriter, 0);   //connect Raw audio to left channel of SD writer
+AudioConnection_F32           patchcord601(i2s_in, 1, audioSDWriter, 1);   //connect Raw audio to right channel of SD writer
 
 void setAlgorithmParameters(void) {
   { 
@@ -233,10 +233,11 @@ void setup() {
   //Set the Bluetooth audio to go straight to the headphone amp, not through the Tympan software
   myTympan.mixBTAudioWithOutput(true);
 
-  //prepare serial comms for SD messages to user
- stereoSDWriter.setSerial(&myTympan);
+  //prepare the SD writer for the format that we want and any error statements
+  audioSDWriter.setSerial(&myTympan);
+  audioSDWriter.setWriteDataType(AudioSDWriter::WriteDataType::INT16);  //this is the built-in the default, but here you could change it to FLOAT32
+  audioSDWriter.setNumWriteChannels(2);             //this is also the defaullt, but you could set it to 2
  
-
   //End of setup
   BOTH_SERIAL.println("Setup: complete.");serialManager.printHelp();
 
@@ -336,9 +337,9 @@ void printCPUandMemoryMessage(void) {
 }
 
 void serviceLEDs(void) {
-  if (stereoSDWriter.getState() == SDAudioWriter::STATE::UNPREPARED) {
+  if (audioSDWriter.getState() == AudioSDWriter::STATE::UNPREPARED) {
     myTympan.setRedLED(HIGH); myTympan.setAmberLED(HIGH); //Turn ON both
-  } else if (stereoSDWriter.getState() == SDAudioWriter::STATE::RECORDING) {
+  } else if (audioSDWriter.getState() == AudioSDWriter::STATE::RECORDING) {
     myTympan.setRedLED(LOW); myTympan.setAmberLED(HIGH); //Go Amber
   } else {
     myTympan.setRedLED(HIGH); myTympan.setAmberLED(LOW); //Go Red
@@ -347,22 +348,22 @@ void serviceLEDs(void) {
 
 #define PRINT_OVERRUN_WARNING 1   //set to 1 to print a warning that the there's been a hiccup in the writing to the SD.
 void serviceSD(void) {
-  if (stereoSDWriter.serviceSD()) {
+  if (audioSDWriter.serviceSD()) {
     //if we're here, data was written to the SD, so do some checking of the timing...
   
     //print a warning if there has been an SD writing hiccup
     if (PRINT_OVERRUN_WARNING) {
-      if (stereoSDWriter.getQueueOverrun() || i2s_in.get_isOutOfMemory()) {
+      if (audioSDWriter.getQueueOverrun() || i2s_in.get_isOutOfMemory()) {
         float blocksPerSecond = ((float)audio_settings.sample_rate_Hz) / ((float)(audio_settings.audio_block_samples));
         BOTH_SERIAL.print("SD Write Warning: there was a hiccup in the writing.  Approx Time (sec): ");
-        BOTH_SERIAL.println( ((float)stereoSDWriter.getNBlocksWritten()) / blocksPerSecond );
+        BOTH_SERIAL.println( ((float)audioSDWriter.getNBlocksWritten()) / blocksPerSecond );
       }
     }
 
     //print timing information to help debug hiccups in the audio.  Are the writes fast enough?  Are there overruns?
     if (PRINT_FULL_SD_TIMING) {
       Serial.print("SD Write Status: "); 
-      Serial.print(stereoSDWriter.getQueueOverrun()); //zero means no overrun
+      Serial.print(audioSDWriter.getQueueOverrun()); //zero means no overrun
       Serial.print(", ");
       Serial.print(AudioMemoryUsageMax_F32());  //hopefully, is less than MAX_F32_BLOCKS
       //Serial.print(", ");
@@ -374,7 +375,7 @@ void serviceSD(void) {
       AudioMemoryUsageMaxReset_F32();
     }
     
-    stereoSDWriter.clearQueueOverrun();
+    audioSDWriter.clearQueueOverrun();
     i2s_in.clear_isOutOfMemory();
   } else {
     //no SD recording currently, so no SD action

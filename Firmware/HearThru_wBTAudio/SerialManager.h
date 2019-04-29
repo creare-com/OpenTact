@@ -16,7 +16,7 @@ class State_t {
 
 //Extern variables
 extern Tympan myTympan;
-extern SDAudioWriter_F32asI16 stereoSDWriter;
+extern AudioSDWriter_F32 audioSDWriter;
 extern float vol_knob_gain_dB;
 extern float input_gain_dB;
 extern State_t myState;
@@ -192,17 +192,17 @@ void SerialManager::respondToByte(char c) {
     case 'p':
       myTympan.println("Received: prepare SD for recording");
       //prepareSDforRecording();
-      stereoSDWriter.prepareSDforRecording();
+      audioSDWriter.prepareSDforRecording();
       break;
     case 'r':
       myTympan.println("Received: begin SD recording");
       //beginRecordingProcess();
-      stereoSDWriter.startRecording();
+      audioSDWriter.startRecording();
       setButtonState("recordStart",true);
       break;
     case 's':
       myTympan.println("Received: stop SD recording");
-      stereoSDWriter.stopRecording();
+      audioSDWriter.stopRecording();
       setButtonState("recordStart",false);
       break;
     case 'J':
