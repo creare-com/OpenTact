@@ -22,17 +22,24 @@ const int AUDIO_MUTE=0, AUDIO_MONO=1, AUDIO_STEREO=2;
 const int ALG_LINEAR=0, ALG_FASTCOMP=1, ALG_SLOWCOMP=2;
 const int INPUT_PCBMICS=0, INPUT_MICJACK=1,INPUT_LINEIN_SE=2;
 
+//define state
+#define NO_STATE (-1)
+class State_t {
+  public:
+    int input_source = NO_STATE;
+    int audio = NO_STATE;
+    int alg = NO_STATE;
+};
 
 //local files
 #include "AudioSDWriter.h" 
 #include "SerialManager.h"
 
-//definitions for SD writing
+//definitions for memory for SD writing
 #define MAX_F32_BLOCKS (192)      //Can't seem to use more than 192, so you could set it to 192.  Won't run at all if much above 400.  
 
 
 //set the sample rate and block size
-//const float sample_rate_Hz = 44117.0f ; //24000 or 44117 (or other frequencies in the table in AudioOutputI2S_F32)
 const float sample_rate_Hz = 96000.0f ; //24000 or 44117 (or other frequencies in the table in AudioOutputI2S_F32)
 const int audio_block_samples = 128;     //do not make bigger than AUDIO_BLOCK_SAMPLES from AudioStream.h (which is 128)  Must be 128 for SD recording.
 AudioSettings_F32 audio_settings(sample_rate_Hz, audio_block_samples);
@@ -52,10 +59,8 @@ BC127 BTModu(&Serial1); //which serial is connected to the BT module? Serial1 is
 //create audio library objects for handling the audio
 Tympan                        myTympan(TympanRev::D);
 AudioInputI2S_F32             i2s_in(audio_settings);   //Digital audio input from the ADC
-//AudioRecordQueue_F32          queueL(audio_settings),       queueR(audio_settings);     //gives access to audio data (will use for SD card)
-AudioSDWriter_F32             audioSDWriter(audio_settings);
+AudioSDWriter_F32             audioSDWriter(audio_settings); //this is stereo by default
 AudioMixer4_F32               inputMixerL(audio_settings),  inputMixerR(audio_settings);
-//AudioFilterBiquad_F32         iirLeft(audio_settings),      iirRight(audio_settings);           //xy=233,172
 AudioSwitch4_F32              inputSwitchL(audio_settings), inputSwitchR(audio_settings); //for switching between the algorithms
 AudioEffectCompWDRC_F32       fastCompL(audio_settings),    fastCompR(audio_settings);  // fast compression
 AudioEffectCompWDRC_F32       slowCompL(audio_settings),    slowCompR(audio_settings);  // slow compression
@@ -67,10 +72,6 @@ AudioConnection_F32           patchcord3(i2s_in, 0, inputMixerL, 0);     //Left 
 AudioConnection_F32           patchcord4(i2s_in, 1, inputMixerL, 1);     //Right audio to Left mixer 
 AudioConnection_F32           patchcord5(i2s_in, 0, inputMixerR, 0);     //Left audio to Right mixer
 AudioConnection_F32           patchcord6(i2s_in, 1, inputMixerR, 1);     //Right audio to Right mixer
-//AudioConnection_F32           patchcord7(inputMixerL, 0, iirLeft, 0);   //connect left audio to IIR filter
-//AudioConnection_F32           patchcord8(inputMixerR, 0, iirRight, 0);  //connect right audio to IIR filter
-//AudioConnection_F32           patchcord9(iirLeft, 0, inputSwitchL, 0);   //connect IIR filter to left switch
-//AudioConnection_F32           patchcord10(iirRight, 0, inputSwitchR, 0);  //connect IIR filter audio to right switch
 AudioConnection_F32           patchcord7(inputMixerL, 0, inputSwitchL, 0);   //connect left audio to switch
 AudioConnection_F32           patchcord8(inputMixerR, 0, inputSwitchR, 0);  //connect right audio to switch
 

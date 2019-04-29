@@ -4,16 +4,6 @@
 
 #include <Tympan_Library.h>
 
-
-//define state
-#define NO_STATE (-1)
-class State_t {
-  public:
-    int input_source = NO_STATE;
-    int audio = NO_STATE;
-    int alg = NO_STATE;
-};
-
 //Extern variables
 extern Tympan myTympan;
 extern AudioSDWriter_F32 audioSDWriter;
